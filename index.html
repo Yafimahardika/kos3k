@@ -1,0 +1,1960 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kos3K — Platform Manajemen Kos Jombang</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --clay:    #E8602C;
+      --clay-lt: #F4845F;
+      --ink:     #1A1714;
+      --ink-2:   #3D3733;
+      --stone:   #8A8480;
+      --fog:     #F2EFEB;
+      --cream:   #FDFAF7;
+      --white:   #FFFFFF;
+      --green:   #2E7D4F;
+      --green-lt:#E8F5EE;
+      --amber:   #B45309;
+      --amber-lt:#FEF3C7;
+      --red:     #C0392B;
+      --red-lt:  #FDECEA;
+      --blue:    #1D4ED8;
+      --blue-lt: #EFF6FF;
+
+      --radius-sm: 6px;
+      --radius:    12px;
+      --radius-lg: 20px;
+      --shadow:    0 2px 12px rgba(26,23,20,0.08);
+      --shadow-md: 0 6px 24px rgba(26,23,20,0.12);
+
+      --font-main: 'Space Grotesk', sans-serif;
+      --font-mono: 'Space Mono', monospace;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font-main);
+      background: var(--fog);
+      color: var(--ink);
+      min-height: 100vh;
+      font-size: 15px;
+      line-height: 1.5;
+    }
+
+    /* ── LOADING ─────────────────────────────────────── */
+    #loading-screen {
+      position: fixed; inset: 0;
+      background: var(--ink);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      z-index: 9999;
+      transition: opacity .4s ease;
+    }
+    #loading-screen .logo-load {
+      font-size: 2.4rem; font-weight: 700; color: var(--cream);
+      letter-spacing: -1px;
+    }
+    #loading-screen .logo-load span { color: var(--clay); }
+    #loading-screen p { color: var(--stone); margin-top: 10px; font-size: .9rem; }
+    .spinner {
+      width: 36px; height: 36px;
+      border: 3px solid rgba(255,255,255,.15);
+      border-top-color: var(--clay);
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+      margin-top: 24px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── SIDEBAR ─────────────────────────────────────── */
+    #app { display: flex; min-height: 100vh; }
+
+    .sidebar {
+      width: 240px; flex-shrink: 0;
+      background: var(--ink);
+      display: flex; flex-direction: column;
+      padding: 0;
+      position: sticky; top: 0; height: 100vh;
+      overflow-y: auto;
+    }
+    .sidebar-logo {
+      padding: 24px 20px 20px;
+      border-bottom: 1px solid rgba(255,255,255,.07);
+    }
+    .sidebar-logo .brand {
+      font-size: 1.5rem; font-weight: 700; color: var(--cream);
+      letter-spacing: -0.5px;
+    }
+    .sidebar-logo .brand span { color: var(--clay); }
+    .sidebar-logo .tagline { font-size: .75rem; color: var(--stone); margin-top: 2px; }
+
+    .sidebar-owner {
+      padding: 16px 20px;
+      border-bottom: 1px solid rgba(255,255,255,.07);
+    }
+    .owner-select-label { font-size: .7rem; color: var(--stone); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 6px; }
+    .owner-select {
+      width: 100%;
+      background: rgba(255,255,255,.07);
+      border: 1px solid rgba(255,255,255,.1);
+      color: var(--cream);
+      border-radius: var(--radius-sm);
+      padding: 8px 10px;
+      font-family: var(--font-main);
+      font-size: .85rem;
+      cursor: pointer;
+      outline: none;
+    }
+    .owner-select option { background: var(--ink-2); }
+
+    .sidebar-nav { padding: 16px 12px; flex: 1; }
+    .nav-section-label {
+      font-size: .68rem; color: var(--stone); text-transform: uppercase;
+      letter-spacing: .1em; padding: 4px 8px 8px; margin-top: 8px;
+    }
+    .nav-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 10px; border-radius: var(--radius-sm);
+      color: rgba(255,255,255,.55); font-size: .88rem; font-weight: 500;
+      cursor: pointer; transition: all .15s;
+      margin-bottom: 2px;
+    }
+    .nav-item:hover { background: rgba(255,255,255,.07); color: var(--cream); }
+    .nav-item.active { background: var(--clay); color: var(--white); }
+    .nav-item .icon { font-size: 1rem; width: 20px; text-align: center; }
+
+    .sidebar-footer {
+      padding: 16px 20px;
+      border-top: 1px solid rgba(255,255,255,.07);
+    }
+    .user-chip {
+      display: flex; align-items: center; gap: 10px;
+    }
+    .user-avatar {
+      width: 34px; height: 34px; border-radius: 50%;
+      background: var(--clay); display: flex; align-items: center; justify-content: center;
+      font-weight: 700; color: white; font-size: .85rem; flex-shrink: 0;
+    }
+    .user-info .user-name { font-size: .85rem; color: var(--cream); font-weight: 600; }
+    .user-info .user-role { font-size: .72rem; color: var(--stone); }
+
+    /* ── MAIN ────────────────────────────────────────── */
+    .main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+
+    .topbar {
+      background: var(--white);
+      border-bottom: 1px solid rgba(26,23,20,.08);
+      padding: 16px 28px;
+      display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 100;
+    }
+    .topbar-title { font-size: 1.1rem; font-weight: 700; color: var(--ink); }
+    .topbar-sub { font-size: .8rem; color: var(--stone); margin-top: 1px; }
+
+    .topbar-actions { display: flex; align-items: center; gap: 10px; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 8px 16px; border-radius: var(--radius-sm);
+      font-family: var(--font-main); font-size: .85rem; font-weight: 600;
+      cursor: pointer; border: none; transition: all .15s;
+    }
+    .btn-primary { background: var(--clay); color: white; }
+    .btn-primary:hover { background: var(--clay-lt); }
+    .btn-ghost { background: transparent; color: var(--ink-2); border: 1.5px solid rgba(26,23,20,.15); }
+    .btn-ghost:hover { background: var(--fog); }
+    .btn-sm { padding: 5px 12px; font-size: .8rem; }
+    .btn-danger { background: var(--red-lt); color: var(--red); border: none; }
+    .btn-danger:hover { background: #fbd5d0; }
+    .btn-success { background: var(--green-lt); color: var(--green); border: none; }
+    .btn-success:hover { background: #d3edde; }
+
+    /* ── CONTENT ─────────────────────────────────────── */
+    .content { padding: 28px; flex: 1; }
+    .content.hidden { display: none; }
+
+    /* ── STATS ROW ───────────────────────────────────── */
+    .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 28px; }
+    .stat-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 20px 22px;
+      box-shadow: var(--shadow);
+      border-left: 4px solid transparent;
+      position: relative; overflow: hidden;
+    }
+    .stat-card::after {
+      content: attr(data-icon);
+      position: absolute; right: 16px; top: 50%; transform: translateY(-50%);
+      font-size: 2rem; opacity: .1;
+    }
+    .stat-card.clay { border-left-color: var(--clay); }
+    .stat-card.green { border-left-color: var(--green); }
+    .stat-card.amber { border-left-color: var(--amber); }
+    .stat-card.blue  { border-left-color: var(--blue); }
+    .stat-label { font-size: .76rem; color: var(--stone); text-transform: uppercase; letter-spacing: .07em; font-weight: 600; }
+    .stat-value { font-size: 1.9rem; font-weight: 700; margin: 4px 0 2px; font-family: var(--font-mono); }
+    .stat-card.clay .stat-value  { color: var(--clay); }
+    .stat-card.green .stat-value { color: var(--green); }
+    .stat-card.amber .stat-value { color: var(--amber); }
+    .stat-card.blue .stat-value  { color: var(--blue); }
+    .stat-sub { font-size: .78rem; color: var(--stone); }
+
+    /* ── GRID 2-COL ──────────────────────────────────── */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+
+    /* ── CARD ────────────────────────────────────────── */
+    .card {
+      background: var(--white);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .card-header {
+      padding: 18px 22px 14px;
+      display: flex; align-items: center; justify-content: space-between;
+      border-bottom: 1px solid var(--fog);
+    }
+    .card-title { font-size: .95rem; font-weight: 700; color: var(--ink); }
+    .card-body { padding: 16px 22px; }
+
+    /* ── BADGES ──────────────────────────────────────── */
+    .badge {
+      display: inline-flex; align-items: center;
+      padding: 3px 9px; border-radius: 20px; font-size: .72rem; font-weight: 600;
+    }
+    .badge-available { background: var(--green-lt); color: var(--green); }
+    .badge-occupied   { background: var(--blue-lt);  color: var(--blue); }
+    .badge-maintenance{ background: var(--amber-lt); color: var(--amber); }
+    .badge-paid       { background: var(--green-lt); color: var(--green); }
+    .badge-unpaid     { background: var(--red-lt);   color: var(--red); }
+    .badge-late       { background: var(--amber-lt); color: var(--amber); }
+    .badge-open       { background: var(--red-lt);   color: var(--red); }
+    .badge-in_progress{ background: var(--amber-lt); color: var(--amber); }
+    .badge-resolved   { background: var(--green-lt); color: var(--green); }
+    .badge-high       { background: #FDECEA; color: #C0392B; }
+    .badge-medium     { background: var(--amber-lt); color: var(--amber); }
+    .badge-low        { background: var(--green-lt); color: var(--green); }
+    .badge-standard   { background: var(--fog); color: var(--ink-2); }
+    .badge-premium    { background: #FFF8E1; color: #92400E; }
+
+    /* ── TABLE ───────────────────────────────────────── */
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; }
+    thead th {
+      padding: 10px 14px; background: var(--fog);
+      font-size: .75rem; text-transform: uppercase; letter-spacing: .07em;
+      color: var(--stone); font-weight: 700; text-align: left;
+    }
+    thead th:first-child { border-radius: var(--radius-sm) 0 0 var(--radius-sm); }
+    thead th:last-child  { border-radius: 0 var(--radius-sm) var(--radius-sm) 0; }
+    tbody tr { border-bottom: 1px solid var(--fog); transition: background .12s; }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: #FDFAF7; }
+    tbody td { padding: 12px 14px; font-size: .875rem; color: var(--ink-2); vertical-align: middle; }
+
+    /* ── ROOM GRID ───────────────────────────────────── */
+    .room-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px; }
+    .room-cell {
+      border-radius: var(--radius);
+      padding: 14px;
+      border: 2px solid transparent;
+      cursor: pointer;
+      transition: all .15s;
+      position: relative;
+    }
+    .room-cell:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+    .room-cell.available   { background: var(--green-lt); border-color: #A7D7BB; }
+    .room-cell.occupied    { background: var(--blue-lt);  border-color: #BFDBFE; }
+    .room-cell.maintenance { background: var(--amber-lt); border-color: #FDE68A; }
+    .room-num { font-family: var(--font-mono); font-size: 1rem; font-weight: 700; }
+    .room-cell.available   .room-num { color: var(--green); }
+    .room-cell.occupied    .room-num { color: var(--blue);  }
+    .room-cell.maintenance .room-num { color: var(--amber); }
+    .room-type-label { font-size: .72rem; margin-top: 3px; opacity: .7; }
+    .room-price { font-size: .78rem; font-weight: 600; margin-top: 6px; }
+    .room-tenant { font-size: .7rem; margin-top: 3px; opacity: .65; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    /* ── PROPERTY TAB ────────────────────────────────── */
+    .prop-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+    .prop-tab {
+      padding: 7px 16px; border-radius: 20px; font-size: .82rem; font-weight: 600;
+      cursor: pointer; transition: all .15s;
+      border: 2px solid rgba(26,23,20,.12); color: var(--ink-2);
+      background: var(--white);
+    }
+    .prop-tab.active { background: var(--clay); color: white; border-color: var(--clay); }
+
+    /* ── PROPERTY CARD ───────────────────────────────── */
+    .prop-header {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .prop-name { font-size: 1.15rem; font-weight: 700; }
+    .prop-address { font-size: .82rem; color: var(--stone); margin-top: 2px; }
+    .facility-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+    .chip {
+      padding: 3px 10px; border-radius: 20px;
+      background: var(--fog); color: var(--ink-2);
+      font-size: .74rem; font-weight: 500;
+    }
+
+    /* ── FORM ────────────────────────────────────────── */
+    .form-group { margin-bottom: 16px; }
+    .form-label { display: block; font-size: .8rem; font-weight: 600; color: var(--ink-2); margin-bottom: 5px; }
+    .form-control {
+      width: 100%;
+      border: 1.5px solid rgba(26,23,20,.15);
+      border-radius: var(--radius-sm);
+      padding: 9px 12px;
+      font-family: var(--font-main); font-size: .88rem;
+      color: var(--ink);
+      background: var(--white);
+      outline: none;
+      transition: border-color .15s;
+    }
+    .form-control:focus { border-color: var(--clay); }
+    select.form-control { cursor: pointer; }
+
+    /* ── MODAL ───────────────────────────────────────── */
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(26,23,20,.55);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 1000; padding: 20px;
+      opacity: 0; pointer-events: none; transition: opacity .2s;
+    }
+    .modal-overlay.open { opacity: 1; pointer-events: all; }
+    .modal {
+      background: var(--white);
+      border-radius: var(--radius-lg);
+      width: 100%; max-width: 520px;
+      max-height: 90vh; overflow-y: auto;
+      box-shadow: 0 20px 60px rgba(26,23,20,.2);
+      transform: translateY(16px); transition: transform .2s;
+    }
+    .modal-overlay.open .modal { transform: translateY(0); }
+    .modal-header {
+      padding: 22px 24px 16px;
+      border-bottom: 1px solid var(--fog);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .modal-title { font-size: 1.05rem; font-weight: 700; }
+    .modal-close {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: var(--fog); border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem; color: var(--stone); transition: all .15s;
+    }
+    .modal-close:hover { background: var(--clay); color: white; }
+    .modal-body { padding: 20px 24px; }
+    .modal-footer {
+      padding: 16px 24px;
+      border-top: 1px solid var(--fog);
+      display: flex; justify-content: flex-end; gap: 10px;
+    }
+
+    /* ── EMPTY STATE ─────────────────────────────────── */
+    .empty-state {
+      text-align: center; padding: 48px 20px;
+      color: var(--stone);
+    }
+    .empty-state .empty-icon { font-size: 2.5rem; margin-bottom: 12px; }
+    .empty-state h3 { font-size: 1rem; font-weight: 600; color: var(--ink-2); }
+    .empty-state p { font-size: .85rem; margin-top: 4px; }
+
+    /* ── TOAST ───────────────────────────────────────── */
+    #toast-container {
+      position: fixed; bottom: 24px; right: 24px;
+      display: flex; flex-direction: column; gap: 8px;
+      z-index: 9999;
+    }
+    .toast {
+      background: var(--ink);
+      color: var(--cream);
+      padding: 12px 18px; border-radius: var(--radius);
+      font-size: .85rem; font-weight: 500;
+      box-shadow: var(--shadow-md);
+      display: flex; align-items: center; gap: 10px;
+      animation: slideUp .25s ease;
+      max-width: 320px;
+    }
+    .toast.success { border-left: 4px solid var(--green); }
+    .toast.error   { border-left: 4px solid var(--red); }
+    .toast.info    { border-left: 4px solid var(--blue); }
+    @keyframes slideUp { from { opacity:0; transform: translateY(12px); } }
+
+    /* ── PROGRESS BAR ────────────────────────────────── */
+    .progress-bar-wrap { background: var(--fog); border-radius: 20px; height: 8px; overflow: hidden; }
+    .progress-bar-fill { height: 100%; border-radius: 20px; transition: width .4s ease; }
+    .progress-bar-fill.green { background: var(--green); }
+    .progress-bar-fill.amber { background: var(--amber); }
+    .progress-bar-fill.red   { background: var(--red); }
+
+    /* ── MAINTENANCE CARD ────────────────────────────── */
+    .maint-card {
+      border: 1.5px solid var(--fog);
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-bottom: 12px;
+      transition: box-shadow .15s;
+    }
+    .maint-card:hover { box-shadow: var(--shadow); }
+    .maint-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+    .maint-desc { font-size: .9rem; font-weight: 600; line-height: 1.4; }
+    .maint-meta { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 8px; }
+    .maint-meta span { font-size: .75rem; color: var(--stone); }
+    .maint-actions { display: flex; gap: 6px; margin-top: 12px; }
+
+    /* ── PAYMENT ITEM ────────────────────────────────── */
+    .pay-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 0; border-bottom: 1px solid var(--fog);
+    }
+    .pay-row:last-child { border-bottom: none; }
+    .pay-name { font-size: .88rem; font-weight: 600; }
+    .pay-detail { font-size: .77rem; color: var(--stone); margin-top: 1px; }
+    .pay-amount { font-family: var(--font-mono); font-size: .9rem; font-weight: 700; color: var(--ink); }
+
+    /* ── TENANT VIEW ─────────────────────────────────── */
+    .tenant-hero {
+      background: linear-gradient(135deg, var(--ink) 0%, var(--ink-2) 100%);
+      border-radius: var(--radius-lg);
+      padding: 28px;
+      color: var(--cream);
+      margin-bottom: 20px;
+      position: relative; overflow: hidden;
+    }
+    .tenant-hero::before {
+      content: '';
+      position: absolute; right: -40px; top: -40px;
+      width: 200px; height: 200px;
+      background: var(--clay); border-radius: 50%; opacity: .12;
+    }
+    .tenant-hero .th-label { font-size: .75rem; text-transform: uppercase; letter-spacing: .1em; color: var(--stone); margin-bottom: 6px; }
+    .tenant-hero .th-name  { font-size: 1.5rem; font-weight: 700; }
+    .tenant-hero .th-room  { font-size: .88rem; color: rgba(255,255,255,.6); margin-top: 4px; }
+    .th-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 20px; }
+    .th-stat { }
+    .th-stat .v { font-size: 1.1rem; font-weight: 700; }
+    .th-stat .l { font-size: .72rem; color: var(--stone); margin-top: 2px; }
+
+    /* ── SETUP BANNER ────────────────────────────────── */
+    .setup-banner {
+      background: linear-gradient(135deg, var(--clay) 0%, #c0392b 100%);
+      border-radius: var(--radius);
+      padding: 20px 24px;
+      color: white;
+      margin-bottom: 24px;
+      display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    }
+    .setup-banner h3 { font-size: 1rem; font-weight: 700; }
+    .setup-banner p { font-size: .83rem; opacity: .85; margin-top: 2px; }
+    .btn-white { background: white; color: var(--clay); font-weight: 700; }
+    .btn-white:hover { background: var(--fog); }
+
+    /* config modal */
+    .config-field { font-size: .75rem; color: var(--stone); margin-bottom: 4px; }
+    .config-input-row { display: flex; gap: 8px; }
+    .config-input-row .form-control { flex: 1; font-family: var(--font-mono); font-size: .8rem; }
+
+    /* ── RESPONSIVE ──────────────────────────────────── */
+    @media (max-width: 900px) {
+      .sidebar { width: 200px; }
+      .stats-row { grid-template-columns: repeat(2, 1fr); }
+      .grid-2 { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 640px) {
+      #app { flex-direction: column; }
+      .sidebar { width: 100%; height: auto; position: static; flex-direction: row; flex-wrap: wrap; padding: 12px; }
+      .sidebar-logo { padding: 8px 12px; border-bottom: none; }
+      .sidebar-nav { display: flex; gap: 4px; flex-wrap: wrap; padding: 0; }
+      .nav-item { padding: 6px 10px; font-size: .78rem; }
+      .nav-section-label { display: none; }
+      .sidebar-owner, .sidebar-footer { display: none; }
+      .stats-row { grid-template-columns: repeat(2, 1fr); }
+      .content { padding: 16px; }
+      .topbar { padding: 12px 16px; }
+    }
+    .hidden { display: none !important; }
+    .flex-gap { display: flex; gap: 10px; align-items: center; }
+    .text-right { text-align: right; }
+    .mt-4 { margin-top: 16px; }
+    .mb-4 { margin-bottom: 16px; }
+    .mb-2 { margin-bottom: 8px; }
+
+    /* realtime indicator */
+    .live-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--green);
+      animation: pulse 2s ease-in-out infinite;
+      display: inline-block;
+    }
+    @keyframes pulse {
+      0%,100% { opacity: 1; } 50% { opacity: .4; }
+    }
+    .live-label { font-size: .75rem; color: var(--green); font-weight: 600; display: flex; align-items: center; gap: 5px; }
+
+    /* seed progress */
+    #seed-progress {
+      margin-top: 14px;
+    }
+    #seed-progress .step { font-size: .8rem; color: rgba(255,255,255,.7); padding: 3px 0; }
+    #seed-progress .step.done { color: #6EE7B7; }
+    #seed-progress .step.active { color: var(--cream); font-weight: 600; }
+  </style>
+</head>
+<body>
+
+<!-- Loading -->
+<div id="loading-screen">
+  <div class="logo-load">Kos<span>3K</span></div>
+  <p>Memuat platform manajemen kos…</p>
+  <div class="spinner"></div>
+</div>
+
+<!-- Toast container -->
+<div id="toast-container"></div>
+
+<!-- Config Modal -->
+<div class="modal-overlay" id="config-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">⚙️ Konfigurasi Firebase</span>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:.85rem;color:var(--stone);margin-bottom:16px;">
+        Masukkan konfigurasi Firebase project Anda. Data ini disimpan di browser Anda saja.
+      </p>
+      <div class="form-group">
+        <label class="form-label">API Key</label>
+        <input class="form-control" id="cfg-apiKey" placeholder="AIza…" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Auth Domain</label>
+        <input class="form-control" id="cfg-authDomain" placeholder="project-id.firebaseapp.com" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Project ID</label>
+        <input class="form-control" id="cfg-projectId" placeholder="koskita-app" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Storage Bucket</label>
+        <input class="form-control" id="cfg-storageBucket" placeholder="project-id.appspot.com" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Messaging Sender ID</label>
+        <input class="form-control" id="cfg-messagingSenderId" placeholder="123456789" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">App ID</label>
+        <input class="form-control" id="cfg-appId" placeholder="1:123…" />
+      </div>
+
+      <div style="background:var(--fog);border-radius:var(--radius-sm);padding:14px;margin-top:8px;">
+        <p style="font-size:.78rem;color:var(--stone);line-height:1.6;">
+          💡 <strong>Cara mendapatkan konfigurasi:</strong><br/>
+          1. Buka <a href="https://console.firebase.google.com" target="_blank" style="color:var(--clay)">console.firebase.google.com</a><br/>
+          2. Buat project "koskita-app"<br/>
+          3. Project Settings → General → Your apps → Web app<br/>
+          4. Salin nilai dari <code>firebaseConfig</code><br/>
+          5. Aktifkan Firestore Database di menu Build
+        </p>
+      </div>
+
+      <div id="seed-progress" class="hidden"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" id="config-demo-btn">Gunakan Demo Mode</button>
+      <button class="btn btn-primary" id="config-save-btn">Sambungkan Firebase</button>
+    </div>
+  </div>
+</div>
+
+<!-- Room Detail Modal -->
+<div class="modal-overlay" id="room-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="room-modal-title">Detail Kamar</span>
+      <button class="modal-close" onclick="closeModal('room-modal')">✕</button>
+    </div>
+    <div class="modal-body" id="room-modal-body"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('room-modal')">Tutup</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Maintenance Modal -->
+<div class="modal-overlay" id="maint-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">+ Permintaan Perbaikan</span>
+      <button class="modal-close" onclick="closeModal('maint-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Properti</label>
+        <select class="form-control" id="maint-propertyId"></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Kamar</label>
+        <select class="form-control" id="maint-roomId"></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Penyewa</label>
+        <select class="form-control" id="maint-tenantId"></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Deskripsi Masalah</label>
+        <textarea class="form-control" id="maint-description" rows="3" placeholder="Contoh: AC bocor di kamar A-01"></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Prioritas</label>
+        <select class="form-control" id="maint-priority">
+          <option value="low">Rendah</option>
+          <option value="medium" selected>Sedang</option>
+          <option value="high">Tinggi</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('maint-modal')">Batal</button>
+      <button class="btn btn-primary" onclick="submitMaintenance()">Kirim Permintaan</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Tenant Modal -->
+<div class="modal-overlay" id="tenant-add-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">+ Tambah Penyewa</span>
+      <button class="modal-close" onclick="closeModal('tenant-add-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Nama Lengkap</label>
+        <input class="form-control" id="ta-name" placeholder="Nama penyewa" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">No. HP</label>
+        <input class="form-control" id="ta-phone" placeholder="08xx-xxxx-xxxx" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">No. KTP</label>
+        <input class="form-control" id="ta-ktp" placeholder="16 digit NIK" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Properti & Kamar</label>
+        <select class="form-control" id="ta-room">
+          <option value="">-- Pilih kamar kosong --</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Tanggal Mulai Sewa</label>
+        <input type="date" class="form-control" id="ta-start" />
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('tenant-add-modal')">Batal</button>
+      <button class="btn btn-primary" onclick="submitAddTenant()">Daftarkan Penyewa</button>
+    </div>
+  </div>
+</div>
+
+<!-- Main App -->
+<div id="app">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="brand">Kos<span>3K</span></div>
+      <div class="tagline">Platform Kos Jombang</div>
+    </div>
+    <div class="sidebar-owner">
+      <div class="owner-select-label">Pemilik Aktif</div>
+      <select class="owner-select" id="owner-select" onchange="switchOwner(this.value)">
+        <option value="">Memuat…</option>
+      </select>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Menu Utama</div>
+      <div class="nav-item active" data-page="dashboard" onclick="navigate('dashboard')">
+        <span class="icon">🏠</span> Dashboard
+      </div>
+      <div class="nav-item" data-page="properties" onclick="navigate('properties')">
+        <span class="icon">🏢</span> Properti & Kamar
+      </div>
+      <div class="nav-item" data-page="tenants" onclick="navigate('tenants')">
+        <span class="icon">👥</span> Penyewa
+      </div>
+      <div class="nav-item" data-page="payments" onclick="navigate('payments')">
+        <span class="icon">💳</span> Pembayaran
+      </div>
+      <div class="nav-item" data-page="maintenance" onclick="navigate('maintenance')">
+        <span class="icon">🔧</span> Perbaikan
+      </div>
+      <div class="nav-section-label">Penyewa</div>
+      <div class="nav-item" data-page="tenant-portal" onclick="navigate('tenant-portal')">
+        <span class="icon">👤</span> Portal Penyewa
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-chip">
+        <div class="user-avatar" id="owner-avatar">?</div>
+        <div class="user-info">
+          <div class="user-name" id="owner-name-display">—</div>
+          <div class="user-role">Pemilik Properti</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+    <!-- Topbar -->
+    <div class="topbar">
+      <div>
+        <div class="topbar-title" id="page-title">Dashboard</div>
+        <div class="topbar-sub" id="page-sub">Ringkasan semua properti Anda</div>
+      </div>
+      <div class="topbar-actions">
+        <div class="live-label"><span class="live-dot"></span> Realtime</div>
+        <button class="btn btn-ghost btn-sm" onclick="handleSeedBtn()">🌱 Isi Data Demo</button>
+      </div>
+    </div>
+
+    <!-- PAGE: Dashboard -->
+    <div class="content" id="page-dashboard">
+      <div id="setup-banner-area"></div>
+
+      <div class="stats-row">
+        <div class="stat-card clay" data-icon="🏢">
+          <div class="stat-label">Total Properti</div>
+          <div class="stat-value" id="stat-properties">—</div>
+          <div class="stat-sub">properti aktif</div>
+        </div>
+        <div class="stat-card green" data-icon="🛏">
+          <div class="stat-label">Kamar Terisi</div>
+          <div class="stat-value" id="stat-occupied">—</div>
+          <div class="stat-sub" id="stat-occupied-sub">dari — kamar</div>
+        </div>
+        <div class="stat-card amber" data-icon="💳">
+          <div class="stat-label">Tunggakan</div>
+          <div class="stat-value" id="stat-unpaid">—</div>
+          <div class="stat-sub">pembayaran tertunda</div>
+        </div>
+        <div class="stat-card blue" data-icon="🔧">
+          <div class="stat-label">Permintaan Aktif</div>
+          <div class="stat-value" id="stat-maint">—</div>
+          <div class="stat-sub">perbaikan terbuka</div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <!-- Hunian per properti -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">📊 Hunian per Properti</span>
+          </div>
+          <div class="card-body" id="occupancy-chart-area">
+            <div class="empty-state"><div class="empty-icon">⏳</div><p>Memuat data…</p></div>
+          </div>
+        </div>
+        <!-- Tagihan terbaru -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">💰 Tagihan Tertunggak</span>
+            <span id="unpaid-count-badge" class="badge badge-unpaid"></span>
+          </div>
+          <div class="card-body" id="unpaid-payments-area" style="max-height:320px;overflow-y:auto;">
+            <div class="empty-state"><div class="empty-icon">⏳</div><p>Memuat…</p></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Maintenance terbuka -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">🔧 Permintaan Perbaikan Terbuka</span>
+          <button class="btn btn-primary btn-sm" onclick="openMaintModal()">+ Tambah</button>
+        </div>
+        <div class="card-body" id="open-maint-area">
+          <div class="empty-state"><div class="empty-icon">⏳</div><p>Memuat…</p></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE: Properties -->
+    <div class="content hidden" id="page-properties">
+      <div class="prop-tabs" id="prop-tabs"></div>
+      <div id="prop-detail-area">
+        <div class="empty-state"><div class="empty-icon">🏢</div><h3>Pilih properti di atas</h3></div>
+      </div>
+    </div>
+
+    <!-- PAGE: Tenants -->
+    <div class="content hidden" id="page-tenants">
+      <div class="flex-gap mb-4" style="justify-content:space-between;">
+        <div></div>
+        <button class="btn btn-primary btn-sm" onclick="openAddTenantModal()">+ Tambah Penyewa</button>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="card-title">👥 Daftar Penyewa</span></div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Nama</th><th>No. HP</th><th>Properti</th><th>Kamar</th>
+                <th>Mulai Sewa</th><th>Status</th><th>Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="tenants-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE: Payments -->
+    <div class="content hidden" id="page-payments">
+      <div class="stats-row" style="grid-template-columns:repeat(3,1fr);">
+        <div class="stat-card green" data-icon="✅">
+          <div class="stat-label">Sudah Dibayar</div>
+          <div class="stat-value" id="pay-stat-paid">—</div>
+          <div class="stat-sub">bulan ini</div>
+        </div>
+        <div class="stat-card amber" data-icon="⏳">
+          <div class="stat-label">Belum Dibayar</div>
+          <div class="stat-value" id="pay-stat-unpaid">—</div>
+          <div class="stat-sub">bulan ini</div>
+        </div>
+        <div class="stat-card clay" data-icon="🔴">
+          <div class="stat-label">Terlambat</div>
+          <div class="stat-value" id="pay-stat-late">—</div>
+          <div class="stat-sub">bulan ini</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">💳 Riwayat Pembayaran</span>
+          <select class="form-control" id="pay-filter" style="width:auto;font-size:.8rem;padding:5px 10px;" onchange="filterPayments()">
+            <option value="all">Semua Status</option>
+            <option value="unpaid">Belum Dibayar</option>
+            <option value="paid">Sudah Dibayar</option>
+            <option value="late">Terlambat</option>
+          </select>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Penyewa</th><th>Properti</th><th>Bulan</th><th>Jumlah</th><th>Status</th><th>Tgl Bayar</th><th>Aksi</th></tr>
+            </thead>
+            <tbody id="payments-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE: Maintenance -->
+    <div class="content hidden" id="page-maintenance">
+      <div class="flex-gap mb-4" style="justify-content:space-between;">
+        <div class="flex-gap">
+          <select class="form-control" id="maint-filter-status" style="width:auto;font-size:.8rem;" onchange="renderMaintenancePage()">
+            <option value="all">Semua Status</option>
+            <option value="open">Terbuka</option>
+            <option value="in_progress">Diproses</option>
+            <option value="resolved">Selesai</option>
+          </select>
+          <select class="form-control" id="maint-filter-priority" style="width:auto;font-size:.8rem;" onchange="renderMaintenancePage()">
+            <option value="all">Semua Prioritas</option>
+            <option value="high">Tinggi</option>
+            <option value="medium">Sedang</option>
+            <option value="low">Rendah</option>
+          </select>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="openMaintModal()">+ Permintaan Baru</button>
+      </div>
+      <div id="maintenance-list"></div>
+    </div>
+
+    <!-- PAGE: Tenant Portal -->
+    <div class="content hidden" id="page-tenant-portal">
+      <div class="mb-4">
+        <label class="form-label">Pilih Penyewa</label>
+        <select class="form-control" id="portal-tenant-select" style="max-width:320px;" onchange="loadTenantPortal(this.value)">
+          <option value="">-- Pilih penyewa --</option>
+        </select>
+      </div>
+      <div id="tenant-portal-content">
+        <div class="empty-state"><div class="empty-icon">👤</div><h3>Pilih penyewa untuk melihat portal</h3></div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- Firebase SDK -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-app.js";
+import {
+  getFirestore, collection, doc, addDoc, setDoc, getDoc, getDocs,
+  updateDoc, onSnapshot, query, where, orderBy, serverTimestamp, Timestamp
+} from "https://www.gstatic.com/firebasejs/11.9.0/firebase-firestore.js";
+
+// ── GLOBALS ────────────────────────────────────────────
+let db = null;
+let DEMO_MODE = false;
+let currentOwnerId = null;
+let allOwners = [];
+let allProperties = [];
+let allRooms = {};       // propertyId → [rooms]
+let allTenants = [];
+let allPayments = [];
+let allMaintenance = [];
+let unsubscribers = [];
+
+// Demo data
+const DEMO_DATA = {
+  owners: [
+    { id: 'owner_yafi', name: 'Yafi Prasetyo', phone: '081234567890', email: 'yafi@kos3k.id' },
+    { id: 'owner_budi', name: 'Budi Santoso',  phone: '082345678901', email: 'budi@kos3k.id' },
+  ],
+  properties: [
+    { id: 'prop_kotaku', ownerId: 'owner_yafi', name: 'Kos Kota Kotaku', address: 'Jl. Gatot Subroto No. 12, Jombang', facilities: ['WiFi', 'Laundry', 'Parkir', 'CCTV'] },
+    { id: 'prop_harmoni', ownerId: 'owner_budi', name: 'Kos Harmoni Jombang', address: 'Jl. Diponegoro No. 45, Jombang', facilities: ['WiFi', 'Parkir', 'Dapur Bersama'] },
+  ],
+  rooms: {
+    prop_kotaku: [
+      { id: 'r_a01', roomNumber: 'A-01', type: 'Standard', price: 800000, status: 'occupied', currentTenantId: 't1' },
+      { id: 'r_a02', roomNumber: 'A-02', type: 'Standard', price: 800000, status: 'occupied', currentTenantId: 't2' },
+      { id: 'r_a03', roomNumber: 'A-03', type: 'Premium', price: 1200000, status: 'occupied', currentTenantId: 't3' },
+      { id: 'r_a04', roomNumber: 'A-04', type: 'Premium', price: 1200000, status: 'maintenance', currentTenantId: null },
+      { id: 'r_b01', roomNumber: 'B-01', type: 'Standard', price: 800000, status: 'occupied', currentTenantId: 't4' },
+      { id: 'r_b02', roomNumber: 'B-02', type: 'Standard', price: 800000, status: 'available', currentTenantId: null },
+    ],
+    prop_harmoni: [
+      { id: 'r_h01', roomNumber: 'H-01', type: 'Standard', price: 750000, status: 'occupied', currentTenantId: 't5' },
+      { id: 'r_h02', roomNumber: 'H-02', type: 'Standard', price: 750000, status: 'occupied', currentTenantId: 't6' },
+      { id: 'r_h03', roomNumber: 'H-03', type: 'Premium', price: 1100000, status: 'occupied', currentTenantId: 't7' },
+      { id: 'r_h04', roomNumber: 'H-04', type: 'Premium', price: 1100000, status: 'available', currentTenantId: null },
+    ],
+  },
+  tenants: [
+    { id: 't1', name: 'Siti Rahayu', phone: '081111111101', ktpNumber: '3515010101980001', propertyId: 'prop_kotaku', roomId: 'r_a01', startDate: new Date('2024-01-01'), endDate: null },
+    { id: 't2', name: 'Ahmad Fauzi', phone: '081111111102', ktpNumber: '3515010101990002', propertyId: 'prop_kotaku', roomId: 'r_a02', startDate: new Date('2024-02-01'), endDate: null },
+    { id: 't3', name: 'Dewi Lestari', phone: '081111111103', ktpNumber: '3515010101950003', propertyId: 'prop_kotaku', roomId: 'r_a03', startDate: new Date('2024-03-01'), endDate: null },
+    { id: 't4', name: 'Rudi Hermawan', phone: '081111111104', ktpNumber: '3515010101960004', propertyId: 'prop_kotaku', roomId: 'r_b01', startDate: new Date('2024-04-01'), endDate: null },
+    { id: 't5', name: 'Rina Wulandari', phone: '081111111105', ktpNumber: '3515010101970005', propertyId: 'prop_harmoni', roomId: 'r_h01', startDate: new Date('2024-01-15'), endDate: null },
+    { id: 't6', name: 'Hendra Kurniawan', phone: '081111111106', ktpNumber: '3515010101980006', propertyId: 'prop_harmoni', roomId: 'r_h02', startDate: new Date('2024-02-15'), endDate: null },
+    { id: 't7', name: 'Mega Putri', phone: '081111111107', ktpNumber: '3515010101990007', propertyId: 'prop_harmoni', roomId: 'r_h03', startDate: new Date('2024-03-15'), endDate: null },
+    { id: 't8', name: 'Bagas Prasetyo', phone: '081111111108', ktpNumber: '3515010101980008', propertyId: 'prop_kotaku', roomId: 'r_a01', startDate: new Date('2025-01-01'), endDate: null },
+    { id: 't9', name: 'Wulan Ayu', phone: '081111111109', ktpNumber: '3515010101970009', propertyId: 'prop_harmoni', roomId: 'r_h01', startDate: new Date('2025-02-01'), endDate: null },
+    { id: 't10', name: 'Farhan Hidayat', phone: '081111111110', ktpNumber: '3515010101960010', propertyId: 'prop_kotaku', roomId: 'r_b01', startDate: new Date('2025-03-01'), endDate: null },
+  ],
+  payments: [
+    { id: 'pay1', tenantId: 't1', propertyId: 'prop_kotaku', month: '2025-06', amount: 800000, status: 'unpaid', paidAt: null },
+    { id: 'pay2', tenantId: 't2', propertyId: 'prop_kotaku', month: '2025-06', amount: 800000, status: 'paid', paidAt: new Date('2025-06-03') },
+    { id: 'pay3', tenantId: 't3', propertyId: 'prop_kotaku', month: '2025-06', amount: 1200000, status: 'unpaid', paidAt: null },
+    { id: 'pay4', tenantId: 't4', propertyId: 'prop_kotaku', month: '2025-06', amount: 800000, status: 'late', paidAt: null },
+    { id: 'pay5', tenantId: 't5', propertyId: 'prop_harmoni', month: '2025-06', amount: 750000, status: 'paid', paidAt: new Date('2025-06-01') },
+    { id: 'pay6', tenantId: 't6', propertyId: 'prop_harmoni', month: '2025-06', amount: 750000, status: 'unpaid', paidAt: null },
+    { id: 'pay7', tenantId: 't7', propertyId: 'prop_harmoni', month: '2025-06', amount: 1100000, status: 'unpaid', paidAt: null },
+    { id: 'pay8', tenantId: 't1', propertyId: 'prop_kotaku', month: '2025-05', amount: 800000, status: 'paid', paidAt: new Date('2025-05-02') },
+    { id: 'pay9', tenantId: 't2', propertyId: 'prop_kotaku', month: '2025-05', amount: 800000, status: 'late', paidAt: new Date('2025-05-18') },
+    { id: 'pay10', tenantId: 't5', propertyId: 'prop_harmoni', month: '2025-05', amount: 750000, status: 'paid', paidAt: new Date('2025-05-01') },
+  ],
+  maintenance: [
+    { id: 'm1', tenantId: 't3', propertyId: 'prop_kotaku', roomId: 'r_a03', description: 'AC bocor di kamar A-03, air menetes ke lantai', priority: 'high', status: 'open', createdAt: new Date('2025-06-10') },
+    { id: 'm2', tenantId: 't5', propertyId: 'prop_harmoni', roomId: 'r_h01', description: 'Kran wastafel kamar mandi menetes terus-menerus', priority: 'medium', status: 'in_progress', createdAt: new Date('2025-06-05') },
+    { id: 'm3', tenantId: 't1', propertyId: 'prop_kotaku', roomId: 'r_a01', description: 'Lampu kamar mati, perlu penggantian bohlam', priority: 'low', status: 'resolved', createdAt: new Date('2025-05-28') },
+  ],
+};
+
+// ── UTILS ──────────────────────────────────────────────
+function toast(msg, type='info') {
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  const icons = { success:'✅', error:'❌', info:'ℹ️' };
+  el.innerHTML = `<span>${icons[type]||''}</span><span>${msg}</span>`;
+  document.getElementById('toast-container').appendChild(el);
+  setTimeout(() => el.remove(), 3500);
+}
+
+function formatRp(n) {
+  return 'Rp ' + (n||0).toLocaleString('id-ID');
+}
+
+function formatDate(d) {
+  if (!d) return '—';
+  const dt = d?.toDate ? d.toDate() : (d instanceof Date ? d : new Date(d));
+  return dt.toLocaleDateString('id-ID', { day:'2-digit', month:'short', year:'numeric' });
+}
+
+function fmtMonth(m) {
+  if (!m) return '—';
+  const [y,mo] = m.split('-');
+  const names = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+  return `${names[parseInt(mo)-1]} ${y}`;
+}
+
+function getBadge(type, val) {
+  const labels = {
+    available:'Tersedia', occupied:'Terisi', maintenance:'Perawatan',
+    paid:'Lunas', unpaid:'Belum Bayar', late:'Terlambat',
+    open:'Terbuka', in_progress:'Diproses', resolved:'Selesai',
+    low:'Rendah', medium:'Sedang', high:'Tinggi',
+    Standard:'Standard', Premium:'Premium'
+  };
+  return `<span class="badge badge-${val}">${labels[val]||val}</span>`;
+}
+
+function getTenantName(id) {
+  return allTenants.find(t => t.id === id)?.name || id;
+}
+function getPropName(id) {
+  return allProperties.find(p => p.id === id)?.name || id;
+}
+function getRoomNumber(propId, roomId) {
+  return (allRooms[propId]||[]).find(r => r.id === roomId)?.roomNumber || roomId;
+}
+
+// ── FIREBASE INIT ──────────────────────────────────────
+function initFirebase(config) {
+  try {
+    const app = initializeApp(config, `kos3k-${Date.now()}`);
+    db = getFirestore(app);
+    return true;
+  } catch (e) {
+    console.error(e);
+    return false;
+  }
+}
+
+// ── LOCAL STORAGE CONFIG ───────────────────────────────
+function saveConfig(cfg) {
+  localStorage.setItem('kos3k_firebase_cfg', JSON.stringify(cfg));
+}
+function loadConfig() {
+  try { return JSON.parse(localStorage.getItem('kos3k_firebase_cfg')); }
+  catch { return null; }
+}
+
+// ── SEED DATA ──────────────────────────────────────────
+async function seedData() {
+  if (!db) return;
+  const prog = document.getElementById('seed-progress');
+  prog.classList.remove('hidden');
+
+  const step = (msg, done=false) => {
+    const el = document.createElement('div');
+    el.className = 'step' + (done?' done':' active');
+    el.textContent = (done?'✓ ':'⟳ ') + msg;
+    prog.appendChild(el);
+  };
+
+  try {
+    step('Membuat owners…');
+    for (const o of DEMO_DATA.owners) {
+      await setDoc(doc(db, 'owners', o.id), { name:o.name, phone:o.phone, email:o.email });
+    }
+    step('2 owners selesai', true);
+
+    step('Membuat properties & rooms…');
+    for (const p of DEMO_DATA.properties) {
+      const { id, ...pData } = p;
+      await setDoc(doc(db, 'properties', id), pData);
+      for (const r of (DEMO_DATA.rooms[id]||[])) {
+        const { id: rid, ...rData } = r;
+        await setDoc(doc(db, 'properties', id, 'rooms', rid), rData);
+      }
+    }
+    step('Properties & rooms selesai', true);
+
+    step('Mendaftarkan 10 penyewa…');
+    for (const t of DEMO_DATA.tenants) {
+      const { id, ...tData } = t;
+      await setDoc(doc(db, 'tenants', id), {
+        ...tData,
+        startDate: Timestamp.fromDate(tData.startDate),
+        endDate: null,
+      });
+    }
+    step('10 penyewa selesai', true);
+
+    step('Generate tagihan pembayaran…');
+    for (const pay of DEMO_DATA.payments) {
+      const { id, ...pData } = pay;
+      await setDoc(doc(db, 'payments', id), {
+        ...pData,
+        paidAt: pData.paidAt ? Timestamp.fromDate(pData.paidAt) : null,
+      });
+    }
+    step('Tagihan selesai', true);
+
+    step('Membuat permintaan perbaikan…');
+    for (const m of DEMO_DATA.maintenance) {
+      const { id, ...mData } = m;
+      await setDoc(doc(db, 'maintenanceRequests', id), {
+        ...mData,
+        createdAt: Timestamp.fromDate(mData.createdAt),
+      });
+    }
+    step('Perbaikan selesai', true);
+    step('🎉 Semua data berhasil diisi!', true);
+    toast('Data demo berhasil diisi ke Firestore!', 'success');
+  } catch (e) {
+    step('Error: ' + e.message);
+    toast('Gagal mengisi data: ' + e.message, 'error');
+  }
+}
+
+// ── CONFIG MODAL ───────────────────────────────────────
+window.openConfigModal = function() {
+  const cfg = loadConfig();
+  if (cfg) {
+    document.getElementById('cfg-apiKey').value = cfg.apiKey || '';
+    document.getElementById('cfg-authDomain').value = cfg.authDomain || '';
+    document.getElementById('cfg-projectId').value = cfg.projectId || '';
+    document.getElementById('cfg-storageBucket').value = cfg.storageBucket || '';
+    document.getElementById('cfg-messagingSenderId').value = cfg.messagingSenderId || '';
+    document.getElementById('cfg-appId').value = cfg.appId || '';
+  }
+  openModal('config-modal');
+};
+
+document.getElementById('config-save-btn').addEventListener('click', async () => {
+  const cfg = {
+    apiKey: document.getElementById('cfg-apiKey').value.trim(),
+    authDomain: document.getElementById('cfg-authDomain').value.trim(),
+    projectId: document.getElementById('cfg-projectId').value.trim(),
+    storageBucket: document.getElementById('cfg-storageBucket').value.trim(),
+    messagingSenderId: document.getElementById('cfg-messagingSenderId').value.trim(),
+    appId: document.getElementById('cfg-appId').value.trim(),
+  };
+  if (!cfg.apiKey || !cfg.projectId) { toast('API Key dan Project ID wajib diisi', 'error'); return; }
+  saveConfig(cfg);
+  DEMO_MODE = false;
+  const ok = initFirebase(cfg);
+  if (!ok) { toast('Gagal inisialisasi Firebase', 'error'); return; }
+  closeModal('config-modal');
+  toast('Firebase tersambung!', 'success');
+  // Ask to seed
+  if (confirm('Isi data demo ke Firestore sekarang?')) await seedData();
+  await loadAllData();
+  renderDashboard();
+});
+
+document.getElementById('config-demo-btn').addEventListener('click', () => {
+  DEMO_MODE = true;
+  closeModal('config-modal');
+  toast('Mode Demo aktif — data tidak tersimpan ke Firestore', 'info');
+  loadDemoData();
+});
+
+// ── MODAL HELPERS ──────────────────────────────────────
+window.openModal = function(id) {
+  document.getElementById(id).classList.add('open');
+};
+window.closeModal = function(id) {
+  document.getElementById(id).classList.remove('open');
+};
+
+// ── DEMO DATA LOAD ─────────────────────────────────────
+function loadDemoData() {
+  allOwners = DEMO_DATA.owners;
+  allProperties = DEMO_DATA.properties;
+  allRooms = DEMO_DATA.rooms;
+  allTenants = DEMO_DATA.tenants;
+  allPayments = DEMO_DATA.payments;
+  allMaintenance = DEMO_DATA.maintenance;
+  populateOwnerSelect();
+  const firstOwner = allOwners[0];
+  if (firstOwner) switchOwner(firstOwner.id);
+  navigate('dashboard');
+  hideSplash();
+}
+
+// ── FIREBASE LOAD ──────────────────────────────────────
+async function loadAllData() {
+  if (!db) return;
+  try {
+    // owners
+    const ownerSnap = await getDocs(collection(db, 'owners'));
+    allOwners = ownerSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+    // properties
+    const propSnap = await getDocs(collection(db, 'properties'));
+    allProperties = propSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+    // rooms (sub-collection)
+    allRooms = {};
+    for (const p of allProperties) {
+      const rSnap = await getDocs(collection(db, 'properties', p.id, 'rooms'));
+      allRooms[p.id] = rSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+    }
+
+    // tenants
+    const tSnap = await getDocs(collection(db, 'tenants'));
+    allTenants = tSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+    // payments
+    const paySnap = await getDocs(collection(db, 'payments'));
+    allPayments = paySnap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+    // maintenance
+    const mSnap = await getDocs(collection(db, 'maintenanceRequests'));
+    allMaintenance = mSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+    populateOwnerSelect();
+    if (allOwners[0]) switchOwner(allOwners[0].id);
+
+    // Real-time listeners
+    setupListeners();
+  } catch(e) {
+    toast('Gagal memuat data: ' + e.message, 'error');
+  }
+}
+
+function setupListeners() {
+  if (!db) return;
+  unsubscribers.forEach(u => u());
+  unsubscribers = [];
+
+  unsubscribers.push(onSnapshot(collection(db, 'payments'), snap => {
+    allPayments = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderDashboard(); renderPaymentsPage();
+  }));
+
+  unsubscribers.push(onSnapshot(collection(db, 'maintenanceRequests'), snap => {
+    allMaintenance = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderDashboard(); renderMaintenancePage();
+  }));
+
+  unsubscribers.push(onSnapshot(collection(db, 'tenants'), snap => {
+    allTenants = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderTenantsPage();
+  }));
+}
+
+// ── OWNER FILTER ───────────────────────────────────────
+function getOwnerProperties() {
+  if (!currentOwnerId) return allProperties;
+  return allProperties.filter(p => p.ownerId === currentOwnerId);
+}
+function getOwnerTenants() {
+  const propIds = getOwnerProperties().map(p => p.id);
+  return allTenants.filter(t => propIds.includes(t.propertyId));
+}
+function getOwnerPayments() {
+  const propIds = getOwnerProperties().map(p => p.id);
+  return allPayments.filter(p => propIds.includes(p.propertyId));
+}
+function getOwnerMaintenance() {
+  const propIds = getOwnerProperties().map(p => p.id);
+  return allMaintenance.filter(m => propIds.includes(m.propertyId));
+}
+
+// ── POPULATE OWNER SELECT ──────────────────────────────
+function populateOwnerSelect() {
+  const sel = document.getElementById('owner-select');
+  sel.innerHTML = allOwners.map(o => `<option value="${o.id}">${o.name}</option>`).join('');
+  // Tenant portal
+  const ptSel = document.getElementById('portal-tenant-select');
+  ptSel.innerHTML = '<option value="">-- Pilih penyewa --</option>' +
+    allTenants.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+}
+
+window.switchOwner = function(id) {
+  currentOwnerId = id;
+  const owner = allOwners.find(o => o.id === id);
+  if (owner) {
+    document.getElementById('owner-avatar').textContent = owner.name[0];
+    document.getElementById('owner-name-display').textContent = owner.name;
+  }
+  renderCurrentPage();
+};
+
+// ── NAVIGATION ─────────────────────────────────────────
+let currentPage = 'dashboard';
+
+window.navigate = function(page) {
+  currentPage = page;
+  document.querySelectorAll('.content').forEach(el => el.classList.add('hidden'));
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  document.getElementById(`page-${page}`).classList.remove('hidden');
+  document.querySelector(`[data-page="${page}"]`)?.classList.add('active');
+
+  const titles = {
+    dashboard: ['Dashboard', 'Ringkasan semua properti Anda'],
+    properties: ['Properti & Kamar', 'Kelola properti dan status kamar'],
+    tenants: ['Penyewa', 'Daftar semua penyewa aktif'],
+    payments: ['Pembayaran', 'Rekap tagihan dan pembayaran'],
+    maintenance: ['Perbaikan', 'Permintaan perbaikan fasilitas'],
+    'tenant-portal': ['Portal Penyewa', 'Tampilan dari sisi penyewa'],
+  };
+  const [title, sub] = titles[page] || ['—',''];
+  document.getElementById('page-title').textContent = title;
+  document.getElementById('page-sub').textContent = sub;
+
+  renderCurrentPage();
+};
+
+function renderCurrentPage() {
+  if (currentPage === 'dashboard') renderDashboard();
+  else if (currentPage === 'properties') renderPropertiesPage();
+  else if (currentPage === 'tenants') renderTenantsPage();
+  else if (currentPage === 'payments') renderPaymentsPage();
+  else if (currentPage === 'maintenance') renderMaintenancePage();
+}
+
+// ── DASHBOARD ─────────────────────────────────────────
+function renderDashboard() {
+  const props = getOwnerProperties();
+  const payments = getOwnerPayments();
+  const maintenance = getOwnerMaintenance();
+
+  // Stats
+  document.getElementById('stat-properties').textContent = props.length;
+
+  let totalRooms = 0, occupiedRooms = 0;
+  props.forEach(p => {
+    const rooms = allRooms[p.id] || [];
+    totalRooms += rooms.length;
+    occupiedRooms += rooms.filter(r => r.status === 'occupied').length;
+  });
+  document.getElementById('stat-occupied').textContent = occupiedRooms;
+  document.getElementById('stat-occupied-sub').textContent = `dari ${totalRooms} kamar`;
+
+  const unpaidPays = payments.filter(p => p.status === 'unpaid' || p.status === 'late');
+  document.getElementById('stat-unpaid').textContent = unpaidPays.length;
+
+  const openMaint = maintenance.filter(m => m.status !== 'resolved');
+  document.getElementById('stat-maint').textContent = openMaint.length;
+
+  // Occupancy chart
+  const chartArea = document.getElementById('occupancy-chart-area');
+  if (props.length === 0) {
+    chartArea.innerHTML = '<div class="empty-state"><div class="empty-icon">🏢</div><p>Belum ada properti</p></div>';
+  } else {
+    chartArea.innerHTML = props.map(p => {
+      const rooms = allRooms[p.id] || [];
+      const occ = rooms.filter(r => r.status === 'occupied').length;
+      const maint = rooms.filter(r => r.status === 'maintenance').length;
+      const avail = rooms.filter(r => r.status === 'available').length;
+      const pct = rooms.length ? Math.round(occ/rooms.length*100) : 0;
+      const barColor = pct >= 80 ? 'green' : pct >= 40 ? 'amber' : 'red';
+      return `
+        <div style="margin-bottom:20px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <div>
+              <div style="font-size:.88rem;font-weight:700;">${p.name}</div>
+              <div style="font-size:.75rem;color:var(--stone);">${occ}/${rooms.length} kamar terisi</div>
+            </div>
+            <div style="font-family:var(--font-mono);font-weight:700;color:var(--${barColor === 'green' ? 'green' : barColor === 'amber' ? 'amber' : 'red'})">${pct}%</div>
+          </div>
+          <div class="progress-bar-wrap">
+            <div class="progress-bar-fill ${barColor}" style="width:${pct}%"></div>
+          </div>
+          <div style="display:flex;gap:12px;margin-top:8px;">
+            <span style="font-size:.73rem;color:var(--green);">● ${occ} Terisi</span>
+            <span style="font-size:.73rem;color:var(--stone);">● ${avail} Kosong</span>
+            <span style="font-size:.73rem;color:var(--amber);">● ${maint} Perawatan</span>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  // Unpaid payments
+  const unpaidArea = document.getElementById('unpaid-payments-area');
+  document.getElementById('unpaid-count-badge').textContent = unpaidPays.length || '';
+  if (unpaidPays.length === 0) {
+    unpaidArea.innerHTML = '<div class="empty-state"><div class="empty-icon">✅</div><h3>Semua pembayaran lunas!</h3></div>';
+  } else {
+    unpaidArea.innerHTML = unpaidPays.slice(0,8).map(pay => `
+      <div class="pay-row">
+        <div>
+          <div class="pay-name">${getTenantName(pay.tenantId)}</div>
+          <div class="pay-detail">${getPropName(pay.propertyId)} · ${fmtMonth(pay.month)}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          ${getBadge('status',pay.status)}
+          <div class="pay-amount">${formatRp(pay.amount)}</div>
+        </div>
+      </div>`).join('');
+  }
+
+  // Open maintenance
+  const maintArea = document.getElementById('open-maint-area');
+  const openM = maintenance.filter(m => m.status !== 'resolved').slice(0,4);
+  if (openM.length === 0) {
+    maintArea.innerHTML = '<div class="empty-state"><div class="empty-icon">✅</div><h3>Tidak ada permintaan terbuka</h3></div>';
+  } else {
+    maintArea.innerHTML = `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;">` +
+      openM.map(m => `
+        <div class="maint-card">
+          <div class="maint-top">
+            <div class="maint-desc">${m.description}</div>
+            ${getBadge('priority', m.priority)}
+          </div>
+          <div class="maint-meta">
+            ${getBadge('status', m.status)}
+            <span>📍 ${getPropName(m.propertyId)}</span>
+            <span>🛏 ${getRoomNumber(m.propertyId, m.roomId)}</span>
+            <span>📅 ${formatDate(m.createdAt)}</span>
+          </div>
+        </div>`).join('') + `</div>`;
+  }
+}
+
+// ── PROPERTIES PAGE ────────────────────────────────────
+let activePropId = null;
+
+function renderPropertiesPage() {
+  const props = getOwnerProperties();
+  const tabsEl = document.getElementById('prop-tabs');
+
+  if (props.length === 0) {
+    tabsEl.innerHTML = '';
+    document.getElementById('prop-detail-area').innerHTML =
+      '<div class="empty-state"><div class="empty-icon">🏢</div><h3>Belum ada properti untuk pemilik ini</h3></div>';
+    return;
+  }
+
+  if (!activePropId || !props.find(p => p.id === activePropId)) {
+    activePropId = props[0].id;
+  }
+
+  tabsEl.innerHTML = props.map(p =>
+    `<div class="prop-tab ${p.id === activePropId ? 'active' : ''}" onclick="selectProp('${p.id}')">${p.name}</div>`
+  ).join('');
+
+  renderPropDetail(activePropId);
+}
+
+window.selectProp = function(id) {
+  activePropId = id;
+  renderPropertiesPage();
+};
+
+function renderPropDetail(propId) {
+  const prop = allProperties.find(p => p.id === propId);
+  if (!prop) return;
+  const rooms = allRooms[propId] || [];
+  const occupied = rooms.filter(r => r.status === 'occupied').length;
+  const available = rooms.filter(r => r.status === 'available').length;
+  const maint = rooms.filter(r => r.status === 'maintenance').length;
+
+  document.getElementById('prop-detail-area').innerHTML = `
+    <div class="card">
+      <div class="card-body">
+        <div class="prop-header">
+          <div>
+            <div class="prop-name">${prop.name}</div>
+            <div class="prop-address">📍 ${prop.address}</div>
+            <div class="facility-chips">
+              ${(prop.facilities||[]).map(f => `<span class="chip">✓ ${f}</span>`).join('')}
+            </div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:.78rem;color:var(--stone);">Pemilik</div>
+            <div style="font-size:.9rem;font-weight:600;">${allOwners.find(o=>o.id===prop.ownerId)?.name || '—'}</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:20px;">
+          <div style="background:var(--green-lt);padding:8px 16px;border-radius:var(--radius);text-align:center;">
+            <div style="font-size:1.2rem;font-weight:700;color:var(--green);font-family:var(--font-mono);">${available}</div>
+            <div style="font-size:.72rem;color:var(--green);">Tersedia</div>
+          </div>
+          <div style="background:var(--blue-lt);padding:8px 16px;border-radius:var(--radius);text-align:center;">
+            <div style="font-size:1.2rem;font-weight:700;color:var(--blue);font-family:var(--font-mono);">${occupied}</div>
+            <div style="font-size:.72rem;color:var(--blue);">Terisi</div>
+          </div>
+          <div style="background:var(--amber-lt);padding:8px 16px;border-radius:var(--radius);text-align:center;">
+            <div style="font-size:1.2rem;font-weight:700;color:var(--amber);font-family:var(--font-mono);">${maint}</div>
+            <div style="font-size:.72rem;color:var(--amber);">Perawatan</div>
+          </div>
+        </div>
+        <div class="room-grid">
+          ${rooms.map(r => {
+            const tenant = allTenants.find(t => t.id === r.currentTenantId);
+            return `<div class="room-cell ${r.status}" onclick="showRoomDetail('${propId}','${r.id}')">
+              <div class="room-num">${r.roomNumber}</div>
+              <div class="room-type-label">${r.type}</div>
+              <div class="room-price">${formatRp(r.price)}/bln</div>
+              ${tenant ? `<div class="room-tenant">👤 ${tenant.name}</div>` : ''}
+            </div>`;
+          }).join('')}
+        </div>
+        <div style="margin-top:16px;display:flex;gap:12px;flex-wrap:wrap;">
+          <span style="font-size:.78rem;display:flex;align-items:center;gap:6px;"><span style="background:var(--green-lt);width:14px;height:14px;border-radius:4px;border:2px solid #A7D7BB;display:inline-block;"></span>Tersedia</span>
+          <span style="font-size:.78rem;display:flex;align-items:center;gap:6px;"><span style="background:var(--blue-lt);width:14px;height:14px;border-radius:4px;border:2px solid #BFDBFE;display:inline-block;"></span>Terisi</span>
+          <span style="font-size:.78rem;display:flex;align-items:center;gap:6px;"><span style="background:var(--amber-lt);width:14px;height:14px;border-radius:4px;border:2px solid #FDE68A;display:inline-block;"></span>Perawatan</span>
+        </div>
+      </div>
+    </div>`;
+}
+
+window.showRoomDetail = function(propId, roomId) {
+  const room = (allRooms[propId]||[]).find(r => r.id === roomId);
+  if (!room) return;
+  const tenant = allTenants.find(t => t.id === room.currentTenantId);
+  const payments = allPayments.filter(p => p.propertyId === propId && tenant && p.tenantId === tenant.id)
+                               .sort((a,b) => (b.month > a.month ? 1 : -1)).slice(0,3);
+
+  document.getElementById('room-modal-title').textContent = `Kamar ${room.roomNumber}`;
+  document.getElementById('room-modal-body').innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+      <div><div style="font-size:.75rem;color:var(--stone);">Tipe</div><div style="font-weight:600;">${room.type}</div></div>
+      <div><div style="font-size:.75rem;color:var(--stone);">Status</div>${getBadge('s',room.status)}</div>
+      <div><div style="font-size:.75rem;color:var(--stone);">Harga</div><div style="font-weight:700;font-family:var(--font-mono);">${formatRp(room.price)}/bulan</div></div>
+      <div><div style="font-size:.75rem;color:var(--stone);">Properti</div><div style="font-weight:600;">${getPropName(propId)}</div></div>
+    </div>
+    ${tenant ? `
+      <div style="background:var(--fog);border-radius:var(--radius);padding:14px;margin-bottom:14px;">
+        <div style="font-size:.8rem;font-weight:700;margin-bottom:8px;">👤 Penyewa Aktif</div>
+        <div style="font-size:.88rem;font-weight:600;">${tenant.name}</div>
+        <div style="font-size:.8rem;color:var(--stone);">📞 ${tenant.phone}</div>
+        <div style="font-size:.8rem;color:var(--stone);">Sewa sejak ${formatDate(tenant.startDate)}</div>
+      </div>
+      ${payments.length ? `
+        <div style="font-size:.8rem;font-weight:700;margin-bottom:8px;">💳 Pembayaran Terakhir</div>
+        ${payments.map(p => `
+          <div class="pay-row">
+            <div><div class="pay-detail">${fmtMonth(p.month)}</div></div>
+            <div style="display:flex;gap:8px;align-items:center;">${getBadge('s',p.status)}<span class="pay-amount">${formatRp(p.amount)}</span></div>
+          </div>`).join('')}
+      ` : ''}
+    ` : '<div class="empty-state" style="padding:20px;"><div>🚪</div><p>Kamar kosong</p></div>'}`;
+  openModal('room-modal');
+};
+
+// ── TENANTS PAGE ───────────────────────────────────────
+function renderTenantsPage() {
+  const tenants = getOwnerTenants();
+  const tbody = document.getElementById('tenants-tbody');
+  if (tenants.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">👥</div><h3>Belum ada penyewa</h3></div></td></tr>';
+    return;
+  }
+  tbody.innerHTML = tenants.map(t => {
+    const prop = allProperties.find(p => p.id === t.propertyId);
+    const room = (allRooms[t.propertyId]||[]).find(r => r.id === t.roomId);
+    const latestPay = allPayments.filter(p => p.tenantId === t.id).sort((a,b) => b.month > a.month ? 1 : -1)[0];
+    return `<tr>
+      <td><div style="font-weight:600;">${t.name}</div><div style="font-size:.75rem;color:var(--stone);">${t.phone}</div></td>
+      <td>${t.phone}</td>
+      <td>${prop?.name || '—'}</td>
+      <td>${room ? getBadge('t', room.type) + ' ' + room.roomNumber : '—'}</td>
+      <td>${formatDate(t.startDate)}</td>
+      <td>${latestPay ? getBadge('p', latestPay.status) : '<span class="badge" style="background:var(--fog);color:var(--stone);">—</span>'}</td>
+      <td>
+        <button class="btn btn-ghost btn-sm" onclick="navigate('tenant-portal');setTimeout(()=>{document.getElementById('portal-tenant-select').value='${t.id}';loadTenantPortal('${t.id}')},100)">Lihat Portal</button>
+      </td>
+    </tr>`;
+  }).join('');
+
+  // Fill room dropdown in add tenant modal
+  const taRoom = document.getElementById('ta-room');
+  const availableRooms = [];
+  getOwnerProperties().forEach(p => {
+    (allRooms[p.id]||[]).filter(r => r.status === 'available').forEach(r => {
+      availableRooms.push({ value: `${p.id}__${r.id}`, label: `${p.name} — Kamar ${r.roomNumber} (${r.type})` });
+    });
+  });
+  taRoom.innerHTML = '<option value="">-- Pilih kamar kosong --</option>' +
+    availableRooms.map(r => `<option value="${r.value}">${r.label}</option>`).join('');
+}
+
+window.openAddTenantModal = function() {
+  renderTenantsPage();
+  document.getElementById('ta-start').value = new Date().toISOString().split('T')[0];
+  openModal('tenant-add-modal');
+};
+
+window.submitAddTenant = async function() {
+  const name = document.getElementById('ta-name').value.trim();
+  const phone = document.getElementById('ta-phone').value.trim();
+  const ktp = document.getElementById('ta-ktp').value.trim();
+  const roomVal = document.getElementById('ta-room').value;
+  const start = document.getElementById('ta-start').value;
+  if (!name || !phone || !roomVal || !start) { toast('Lengkapi semua field wajib', 'error'); return; }
+
+  const [propId, roomId] = roomVal.split('__');
+  const newTenant = { name, phone, ktpNumber: ktp, propertyId: propId, roomId, startDate: new Date(start), endDate: null };
+
+  if (DEMO_MODE) {
+    const id = 'demo_' + Date.now();
+    allTenants.push({ id, ...newTenant });
+    if (allRooms[propId]) {
+      const r = allRooms[propId].find(r => r.id === roomId);
+      if (r) { r.status = 'occupied'; r.currentTenantId = id; }
+    }
+    closeModal('tenant-add-modal');
+    toast(`Penyewa ${name} berhasil ditambahkan (Demo)`, 'success');
+    renderTenantsPage(); renderDashboard();
+    return;
+  }
+
+  try {
+    const docRef = await addDoc(collection(db, 'tenants'), {
+      ...newTenant, startDate: Timestamp.fromDate(new Date(start)),
+    });
+    await updateDoc(doc(db, 'properties', propId, 'rooms', roomId), {
+      status: 'occupied', currentTenantId: docRef.id,
+    });
+    closeModal('tenant-add-modal');
+    toast(`Penyewa ${name} berhasil didaftarkan`, 'success');
+    await loadAllData();
+  } catch(e) {
+    toast('Error: ' + e.message, 'error');
+  }
+};
+
+// ── PAYMENTS PAGE ──────────────────────────────────────
+window.filterPayments = renderPaymentsPage;
+
+function renderPaymentsPage() {
+  const payments = getOwnerPayments();
+  const filter = document.getElementById('pay-filter')?.value || 'all';
+
+  const paid = payments.filter(p => p.status === 'paid').length;
+  const unpaid = payments.filter(p => p.status === 'unpaid').length;
+  const late = payments.filter(p => p.status === 'late').length;
+  document.getElementById('pay-stat-paid').textContent = paid;
+  document.getElementById('pay-stat-unpaid').textContent = unpaid;
+  document.getElementById('pay-stat-late').textContent = late;
+
+  const filtered = filter === 'all' ? payments : payments.filter(p => p.status === filter);
+  const sorted = [...filtered].sort((a,b) => b.month > a.month ? 1 : -1);
+
+  const tbody = document.getElementById('payments-tbody');
+  if (sorted.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">💳</div><h3>Tidak ada pembayaran</h3></div></td></tr>';
+    return;
+  }
+  tbody.innerHTML = sorted.map(pay => `
+    <tr>
+      <td><div style="font-weight:600;">${getTenantName(pay.tenantId)}</div></td>
+      <td>${getPropName(pay.propertyId)}</td>
+      <td><span style="font-family:var(--font-mono);font-size:.82rem;">${fmtMonth(pay.month)}</span></td>
+      <td><span style="font-family:var(--font-mono);font-weight:700;">${formatRp(pay.amount)}</span></td>
+      <td>${getBadge('s', pay.status)}</td>
+      <td>${formatDate(pay.paidAt)}</td>
+      <td>
+        ${pay.status !== 'paid' ? `<button class="btn btn-success btn-sm" onclick="markPaid('${pay.id}')">✓ Lunas</button>` : ''}
+        ${pay.status === 'unpaid' ? `<button class="btn btn-danger btn-sm" onclick="markLate('${pay.id}')">Terlambat</button>` : ''}
+      </td>
+    </tr>`).join('');
+}
+
+window.markPaid = async function(payId) {
+  if (DEMO_MODE) {
+    const p = allPayments.find(p => p.id === payId);
+    if (p) { p.status = 'paid'; p.paidAt = new Date(); }
+    renderPaymentsPage(); renderDashboard();
+    toast('Pembayaran ditandai lunas (Demo)', 'success');
+    return;
+  }
+  try {
+    await updateDoc(doc(db, 'payments', payId), { status: 'paid', paidAt: serverTimestamp() });
+    toast('Pembayaran ditandai lunas', 'success');
+  } catch(e) { toast('Error: ' + e.message, 'error'); }
+};
+
+window.markLate = async function(payId) {
+  if (DEMO_MODE) {
+    const p = allPayments.find(p => p.id === payId);
+    if (p) p.status = 'late';
+    renderPaymentsPage(); renderDashboard();
+    toast('Status diubah ke Terlambat (Demo)', 'info');
+    return;
+  }
+  try {
+    await updateDoc(doc(db, 'payments', payId), { status: 'late' });
+    toast('Status diubah ke Terlambat', 'info');
+  } catch(e) { toast('Error: ' + e.message, 'error'); }
+};
+
+// ── MAINTENANCE PAGE ───────────────────────────────────
+window.renderMaintenancePage = function() {
+  const list = getOwnerMaintenance();
+  const filterStatus = document.getElementById('maint-filter-status')?.value || 'all';
+  const filterPriority = document.getElementById('maint-filter-priority')?.value || 'all';
+
+  let filtered = list;
+  if (filterStatus !== 'all') filtered = filtered.filter(m => m.status === filterStatus);
+  if (filterPriority !== 'all') filtered = filtered.filter(m => m.priority === filterPriority);
+  filtered = [...filtered].sort((a,b) => {
+    const pd = {high:0,medium:1,low:2};
+    return (pd[a.priority]||1) - (pd[b.priority]||1);
+  });
+
+  const container = document.getElementById('maintenance-list');
+  if (filtered.length === 0) {
+    container.innerHTML = '<div class="empty-state"><div class="empty-icon">🔧</div><h3>Tidak ada permintaan perbaikan</h3></div>';
+    return;
+  }
+  container.innerHTML = filtered.map(m => `
+    <div class="maint-card">
+      <div class="maint-top">
+        <div class="maint-desc">${m.description}</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">${getBadge('p',m.priority)}${getBadge('s',m.status)}</div>
+      </div>
+      <div class="maint-meta">
+        <span>👤 ${getTenantName(m.tenantId)}</span>
+        <span>📍 ${getPropName(m.propertyId)}</span>
+        <span>🛏 ${getRoomNumber(m.propertyId, m.roomId)}</span>
+        <span>📅 ${formatDate(m.createdAt)}</span>
+      </div>
+      <div class="maint-actions">
+        ${m.status === 'open' ? `<button class="btn btn-ghost btn-sm" onclick="updateMaintStatus('${m.id}','in_progress')">⟳ Proses</button>` : ''}
+        ${m.status === 'in_progress' ? `<button class="btn btn-success btn-sm" onclick="updateMaintStatus('${m.id}','resolved')">✓ Selesai</button>` : ''}
+        ${m.status === 'resolved' ? `<span style="font-size:.78rem;color:var(--green);">✅ Sudah diselesaikan</span>` : ''}
+      </div>
+    </div>`).join('');
+};
+
+window.updateMaintStatus = async function(id, status) {
+  if (DEMO_MODE) {
+    const m = allMaintenance.find(m => m.id === id);
+    if (m) m.status = status;
+    renderMaintenancePage(); renderDashboard();
+    toast('Status perbaikan diperbarui (Demo)', 'success');
+    return;
+  }
+  try {
+    await updateDoc(doc(db, 'maintenanceRequests', id), { status });
+    toast('Status perbaikan diperbarui', 'success');
+  } catch(e) { toast('Error: ' + e.message, 'error'); }
+};
+
+window.openMaintModal = function() {
+  const propSel = document.getElementById('maint-propertyId');
+  propSel.innerHTML = getOwnerProperties().map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+  updateMaintRooms();
+  openModal('maint-modal');
+};
+
+document.getElementById('maint-propertyId').addEventListener('change', updateMaintRooms);
+
+function updateMaintRooms() {
+  const propId = document.getElementById('maint-propertyId').value;
+  const rooms = (allRooms[propId]||[]).filter(r => r.status === 'occupied');
+  document.getElementById('maint-roomId').innerHTML = rooms.map(r => `<option value="${r.id}">${r.roomNumber}</option>`).join('');
+
+  const tenantSel = document.getElementById('maint-tenantId');
+  const tenants = allTenants.filter(t => t.propertyId === propId);
+  tenantSel.innerHTML = tenants.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+}
+
+window.submitMaintenance = async function() {
+  const propId = document.getElementById('maint-propertyId').value;
+  const roomId = document.getElementById('maint-roomId').value;
+  const tenantId = document.getElementById('maint-tenantId').value;
+  const description = document.getElementById('maint-description').value.trim();
+  const priority = document.getElementById('maint-priority').value;
+  if (!description) { toast('Isi deskripsi masalah', 'error'); return; }
+
+  const newM = { tenantId, propertyId: propId, roomId, description, priority, status: 'open', createdAt: new Date() };
+
+  if (DEMO_MODE) {
+    allMaintenance.push({ id: 'demo_' + Date.now(), ...newM });
+    closeModal('maint-modal');
+    toast('Permintaan perbaikan ditambahkan (Demo)', 'success');
+    renderMaintenancePage(); renderDashboard();
+    return;
+  }
+  try {
+    await addDoc(collection(db, 'maintenanceRequests'), { ...newM, createdAt: serverTimestamp() });
+    closeModal('maint-modal');
+    toast('Permintaan perbaikan dikirim', 'success');
+  } catch(e) { toast('Error: ' + e.message, 'error'); }
+};
+
+// ── TENANT PORTAL ──────────────────────────────────────
+window.loadTenantPortal = function(tenantId) {
+  if (!tenantId) {
+    document.getElementById('tenant-portal-content').innerHTML =
+      '<div class="empty-state"><div class="empty-icon">👤</div><h3>Pilih penyewa</h3></div>';
+    return;
+  }
+  const tenant = allTenants.find(t => t.id === tenantId);
+  if (!tenant) return;
+  const prop = allProperties.find(p => p.id === tenant.propertyId);
+  const room = (allRooms[tenant.propertyId]||[]).find(r => r.id === tenant.roomId);
+  const payments = allPayments.filter(p => p.tenantId === tenantId).sort((a,b) => b.month > a.month ? 1 : -1);
+  const maintReqs = allMaintenance.filter(m => m.tenantId === tenantId);
+  const latestUnpaid = payments.find(p => p.status !== 'paid');
+
+  document.getElementById('tenant-portal-content').innerHTML = `
+    <div class="tenant-hero">
+      <div class="th-label">Selamat datang,</div>
+      <div class="th-name">${tenant.name}</div>
+      <div class="th-room">🏢 ${prop?.name || '—'} · 🛏 Kamar ${room?.roomNumber || '—'} (${room?.type || '—'})</div>
+      <div class="th-grid">
+        <div class="th-stat">
+          <div class="v">${formatRp(room?.price || 0)}</div>
+          <div class="l">Biaya/bulan</div>
+        </div>
+        <div class="th-stat">
+          <div class="v">${formatDate(tenant.startDate)}</div>
+          <div class="l">Mulai sewa</div>
+        </div>
+        <div class="th-stat">
+          <div class="v">${maintReqs.filter(m => m.status !== 'resolved').length}</div>
+          <div class="l">Perbaikan aktif</div>
+        </div>
+      </div>
+    </div>
+
+    ${latestUnpaid ? `
+      <div style="background:var(--amber-lt);border:2px solid #FDE68A;border-radius:var(--radius);padding:16px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;">
+        <div>
+          <div style="font-weight:700;color:var(--amber);">⚠️ Ada Tagihan Tertunggak</div>
+          <div style="font-size:.85rem;color:var(--ink-2);margin-top:2px;">${fmtMonth(latestUnpaid.month)} — ${formatRp(latestUnpaid.amount)}</div>
+        </div>
+        ${getBadge('s', latestUnpaid.status)}
+      </div>
+    ` : `
+      <div style="background:var(--green-lt);border:2px solid #A7D7BB;border-radius:var(--radius);padding:16px;margin-bottom:20px;">
+        <div style="font-weight:700;color:var(--green);">✅ Semua tagihan sudah lunas</div>
+      </div>
+    `}
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-header"><span class="card-title">💳 Riwayat Tagihan</span></div>
+        <div class="card-body">
+          ${payments.length === 0 ? '<div class="empty-state" style="padding:20px;"><p>Belum ada tagihan</p></div>' :
+            payments.map(p => `
+              <div class="pay-row">
+                <div>
+                  <div class="pay-name">${fmtMonth(p.month)}</div>
+                  ${p.paidAt ? `<div class="pay-detail">Dibayar ${formatDate(p.paidAt)}</div>` : ''}
+                </div>
+                <div style="display:flex;gap:8px;align-items:center;">
+                  ${getBadge('s',p.status)}
+                  <div class="pay-amount">${formatRp(p.amount)}</div>
+                </div>
+              </div>`).join('')}
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">🔧 Permintaan Perbaikan</span>
+          <button class="btn btn-primary btn-sm" onclick="openMaintModalForTenant('${tenantId}')">+ Ajukan</button>
+        </div>
+        <div class="card-body">
+          ${maintReqs.length === 0 ? '<div class="empty-state" style="padding:20px;"><p>Belum ada permintaan</p></div>' :
+            maintReqs.map(m => `
+              <div class="maint-card" style="margin-bottom:10px;">
+                <div class="maint-top">
+                  <div class="maint-desc">${m.description}</div>
+                  ${getBadge('p',m.priority)}
+                </div>
+                <div class="maint-meta">
+                  ${getBadge('s',m.status)}
+                  <span>📅 ${formatDate(m.createdAt)}</span>
+                </div>
+              </div>`).join('')}
+        </div>
+      </div>
+    </div>
+
+    <div class="card mt-4">
+      <div class="card-header"><span class="card-title">🏠 Fasilitas Properti</span></div>
+      <div class="card-body">
+        <div class="facility-chips">
+          ${(prop?.facilities||[]).map(f => `<span class="chip" style="background:var(--fog);">✓ ${f}</span>`).join('')}
+        </div>
+      </div>
+    </div>`;
+};
+
+window.openMaintModalForTenant = function(tenantId) {
+  const tenant = allTenants.find(t => t.id === tenantId);
+  if (!tenant) return;
+  openMaintModal();
+  setTimeout(() => {
+    document.getElementById('maint-propertyId').value = tenant.propertyId;
+    updateMaintRooms();
+    document.getElementById('maint-roomId').value = tenant.roomId;
+    document.getElementById('maint-tenantId').value = tenantId;
+  }, 100);
+};
+
+// ── POPULATE TENANT PORTAL SELECT ─────────────────────
+function populateTenantPortalSelect() {
+  const sel = document.getElementById('portal-tenant-select');
+  sel.innerHTML = '<option value="">-- Pilih penyewa --</option>' +
+    allTenants.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+}
+
+// ── SEED BUTTON ────────────────────────────────────────
+window.handleSeedBtn = async function() {
+  if (DEMO_MODE) {
+    toast('Mode Demo aktif — data tidak tersimpan ke Firestore', 'info');
+    return;
+  }
+  if (!confirm('Ini akan mengisi / menimpa data demo ke Firestore project Anda.\nLanjutkan?')) return;
+  await seedData();
+  await loadAllData();
+  renderCurrentPage();
+};
+
+// ── FIREBASE CONFIG (hardcoded) ────────────────────────
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyAjFNucN_qgQBbeZLyxCKayPuclK5_QbbU",
+  authDomain: "project-a39ad.firebaseapp.com",
+  projectId: "project-a39ad",
+  storageBucket: "project-a39ad.firebasestorage.app",
+  messagingSenderId: "1871108851",
+  appId: "1:1871108851:web:39177a712ad1aa2884f586"
+};
+
+// ── INIT ───────────────────────────────────────────────
+function hideSplash() {
+  const s = document.getElementById('loading-screen');
+  s.style.opacity = '0';
+  setTimeout(() => s.remove(), 400);
+}
+
+async function init() {
+  // Coba sambung ke Firebase langsung dengan config hardcoded
+  const ok = initFirebase(FIREBASE_CONFIG);
+  if (ok) {
+    DEMO_MODE = false;
+    try {
+      await loadAllData();
+      hideSplash();
+      navigate('dashboard');
+      // Jika Firestore kosong, tawarkan seed otomatis
+      if (allOwners.length === 0) {
+        hideSplash();
+        if (confirm('Database Firestore masih kosong.\nIsi data demo sekarang? (2 owner, 2 properti, 10 penyewa, tagihan & perbaikan)')) {
+          await seedData();
+          await loadAllData();
+        }
+        navigate('dashboard');
+      }
+      return;
+    } catch(e) {
+      console.warn('Firebase load error, falling back to demo:', e.message);
+    }
+  }
+  // Fallback ke demo mode
+  DEMO_MODE = true;
+  hideSplash();
+  toast('Tidak dapat terhubung ke Firebase — Mode Demo aktif', 'info');
+  loadDemoData();
+}
+
+init();
+</script>
+</body>
+</html>
